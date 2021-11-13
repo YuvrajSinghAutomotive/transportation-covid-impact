@@ -171,19 +171,3 @@ for col in data.columns:
 for col in data.columns:
     if data[col].dtype == bool:
         data[col] = data[col].astype(int)     ## convert bool to int
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
