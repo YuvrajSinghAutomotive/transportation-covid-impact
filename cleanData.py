@@ -7,6 +7,84 @@ System arguments:
 '''
 verbose = sys.argv[1] if len(sys.argv)>1 else 0
 
+'''
+Download Dataset from Kaggle
+'''
+import kaggle
+import zipfile
+import os
+
+# Download dataset if zip file not found
+if 'us-accidents.zip' not in os.listdir():
+    os.system('kaggle datasets download -d sobhanmoosavi/us-accidents')
+else: print('Dataset already downloaded')
+# extract data files
+zipfile.ZipFile('us-accidents.zip').extractall()
+
+
+
+'''
+Clean Data: Import libraries
+'''
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import os
+from datetime import datetime
+import time
+
+pd.set_option('display.max_columns', None)
+
+dataDirectory = './'
+
+def find_csv_files( path , suffix=".csv" ):
+    files = os.listdir(path)
+    return [ filename for filename in files if filename.endswith( suffix ) ]
+
+filenames = find_csv_files( path=dataDirectory , suffix='.csv' )
+print(filenames)
+
+'''
+Extract raw data from csv file(s)
+'''
+rawDataDf = []
+for file in filenames:
+    rawDataDf.append( pd.read_csv( dataDirectory + file ) )
+
+print('Number of Raw Data: DataFrames extracted: {}'.format(len(rawDataDf)) )
+
+## Preserve rawData in a DataFrame: use a DataFrame 'data' to make all changes
+rawData = rawDataDf[0]
+N = len(rawData)        ## number of observations in raw data
+
+data = rawData.copy()
+
+if verbose!=0:
+    ## First look at dataset
+    print(data.head())
+    print(data.dtypes)
+
+'''
+Pre-Processing
+Create feature: length of a traffic incident in seconds
+This feature enables us to remove Start_Time and End_Time columns from the dataset
+'''
+startTime = []; invalidStartTimeCounter = 0
+endTime = [];   invalidEndTimeCounter = 0
+invalidTimeFormatIdx = []
+    
+for i in range(len(rawData)):
+    startDateString = data['Start_Time'][i]
+    endDateString = data['End_Time'][i]
+    try:
+        startTime.append(datetime.fromisoformat(startDateString))
+        endTime.append(datetime.fromisoformat(endDateString))
+    except ValueError:
+        try: startTime.append(datetime.fromisoformat(startDateString))
+        except: invalidStartTimeCounter += 1
+        try: endTime.append(datetime.fromisoformat(endDateString))
+        except: invalidEndTimeCounter += 1
+
 def cleanData(verbose):
     import kaggle
     import zipfile
