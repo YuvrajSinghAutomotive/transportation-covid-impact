@@ -21,6 +21,8 @@ else: print('Dataset already downloaded')
 # extract data files
 zipfile.ZipFile('us-accidents.zip').extractall()
 
+
+
 '''
 Clean Data: Import libraries
 '''
