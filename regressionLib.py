@@ -6,6 +6,7 @@ import pandas as pd
 import os, os.path
 import warnings
 import sys
+import matplotlib.pyplot as plt
 
 '''
 Helper functions
@@ -94,5 +95,22 @@ class splitCV:
                 else: splits.append( ( self.X[idxTrain],self.X[idxTest],self.Y[idxTrain],self.Y[idxTest],self.w[idxTrain],self.w[idxTest] ) )
         return splits
 
-
-
+'''
+Model Validation
+'''
+from scipy.stats import beta
+def plotBetaAccuracy(accuracy,numTestSamples):
+    '''
+    Test Accuracy and Confidence: beta distribution of accuracy scores
+    '''
+    betaEval = beta.pdf(np.linspace(start=0,stop=1,num=1000), 
+                        a=np.floor((accuracy*numTestSamples))+1 , b=numTestSamples - np.floor((accuracy*numTestSamples)) +1)
+    plt.plot(np.linspace(start=0,stop=1,num=1000),betaEval,color='r')
+    plt.xlim(0,1)
+    plt.title("Test Accuracy: \nBeta Distribution: a = {}, b = {}".format(np.floor((accuracy*numTestSamples))+1 , numTestSamples - np.floor((accuracy*numTestSamples)) +1 ) )
+    plt.xlabel('Test Accuracy')
+    plt.ylabel('Probability Density')
+    plt.show()
+    
+def credibleInterval():
+    pass
