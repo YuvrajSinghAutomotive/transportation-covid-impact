@@ -94,7 +94,7 @@ def cleanData(verbose):
     # Download dataset if zip file not found
     if 'us-accidents.zip' not in os.listdir():
         os.system('kaggle datasets download -d sobhanmoosavi/us-accidents')
-    else: print('Dataset already downloaded')
+    else: print('Dataset already downloaded')  
     # extract data files
     zipfile.ZipFile('us-accidents.zip').extractall()
 
