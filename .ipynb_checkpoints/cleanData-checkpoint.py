@@ -172,8 +172,19 @@ def cleanData(verbose):
     for col in data.columns:
         if data[col].dtype == bool:
             data[col] = data[col].astype(int)     ## convert bool to int
-
+    
+    '''
+    Remove data with zero variance
+    '''
+    data = data.drop(columns = data.columns[ np.where(data.std()==0)])
+    
+    '''
+    Generate datasets for preCovid and postCovid data
+    '''
     dataPreCovid = data.loc[data['preCovid']==1].drop(columns=['preCovid'])
     dataPostCovid = data.loc[data['preCovid']==0].drop(columns=['preCovid'])
+    # colZeroVar = list( set(data.columns[np.where(dataPreCovid.std()==0)]).union( set(data.columns[np.where(dataPostCovid.std()==0)]) ) )
+    # dataPreCovid = dataPreCovid.drop(columns = colZeroVar)
+    # dataPostCovid = dataPostCovid.drop(columns = colZeroVar)
 
     return data, dataPreCovid, dataPostCovid

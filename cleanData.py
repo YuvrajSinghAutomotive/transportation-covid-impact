@@ -172,8 +172,40 @@ def cleanData(verbose):
     for col in data.columns:
         if data[col].dtype == bool:
             data[col] = data[col].astype(int)     ## convert bool to int
-
+    
+    '''
+    Remove data with zero variance
+    '''
+    data = data.drop(columns = data.columns[ np.where(data.std()==0)])
+    
+    '''
+    Generate datasets for preCovid and postCovid data
+    '''
     dataPreCovid = data.loc[data['preCovid']==1].drop(columns=['preCovid'])
     dataPostCovid = data.loc[data['preCovid']==0].drop(columns=['preCovid'])
+    
+    colsDrop1 = data.columns[np.where(dataPreCovid.std()==0)]
+    colsDrop2 = data.columns[np.where(dataPostCovid.std()==0)]
+    dataPreCovid = dataPreCovid.drop( columns=colsDrop1 )
+    dataPreCovid = dataPreCovid.drop( columns=colsDrop2 )
+    dataPostCovid = dataPostCovid.drop( columns=colsDrop1 )
+    dataPostCovid = dataPostCovid.drop( columns=colsDrop2 )
+
+    # print(dataPreCovid.columns[np.where(dataPreCovid.std()==0)])          ## there are still columns with zero variance
+    # print(dataPostCovid.columns[np.where(dataPostCovid.std()==0)])
+
+    for col in dataPreCovid.columns[np.where(dataPreCovid.std()==0)]:
+        if col in dataPostCovid.columns:
+            dataPreCovid = dataPreCovid.drop( columns=col )
+            dataPostCovid = dataPostCovid.drop( columns=col )
+        else:
+            print('Column not found in dataPreCovid')
+
+    for col in dataPostCovid.columns[np.where(dataPostCovid.std()==0)]:
+        if col in dataPreCovid.columns:
+            dataPreCovid = dataPreCovid.drop( columns=col )
+            dataPostCovid = dataPostCovid.drop( columns=col )
+        else:
+            print('Column not found in dataPostCovid')
 
     return data, dataPreCovid, dataPostCovid
