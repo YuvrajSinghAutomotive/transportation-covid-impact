@@ -4,6 +4,8 @@ import sys
 System arguments:
     - sys.argv[0] : cleandata.py
     - sys.argv[1] : verbose = 0 [default] or 1
+Usage:
+data,dataPreCovid,dataPostCovid = cleanData(verbose=0)
 '''
 verbose = sys.argv[1] if len(sys.argv)>1 else 0
 
@@ -171,4 +173,7 @@ def cleanData(verbose):
         if data[col].dtype == bool:
             data[col] = data[col].astype(int)     ## convert bool to int
 
-    return data
+    dataPreCovid = data.loc[data['preCovid']==1].drop(columns=['preCovid'])
+    dataPostCovid = data.loc[data['preCovid']==0].drop(columns=['preCovid'])
+
+    return data, dataPreCovid, dataPostCovid

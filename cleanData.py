@@ -173,7 +173,7 @@ def cleanData(verbose):
         if data[col].dtype == bool:
             data[col] = data[col].astype(int)     ## convert bool to int
 
-    dataPreCovid = data.loc[data['preCovid']==1]
-    dataPostCovid = data.loc[data['preCovid']==0]
+    dataPreCovid = data.loc[data['preCovid']==1].drop(columns=['preCovid'])
+    dataPostCovid = data.loc[data['preCovid']==0].drop(columns=['preCovid'])
 
     return data, dataPreCovid, dataPostCovid
