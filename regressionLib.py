@@ -123,7 +123,7 @@ Performance Metrics
 '''
 def confusionMatrix(classificationTest,Ytest):
     # classificationTest: numpy array or list
-    # Ytest: pandas Series or numpy array
+    # Ytest: pandas Series
     # Confusion Matrix: predictedLabel (rows) and actualLabel (columns)
     cMatrix = np.zeros(( len(Ytest.unique()) , len(Ytest.unique()) ))
     for idxPredictedLabel,predictedLabel in enumerate(Ytest.unique()):
