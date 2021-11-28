@@ -34,20 +34,33 @@ from regressionLib import plotPredictorVsResponse
 '''
 Data Dictionaries
 '''
+## Only select predictors highly correlated with severity
+print('Correlation with severity')
+def predictorsCorrelatedWithTarget(data):
+    correlation = [1]
+    for i in range(1,len(data.columns)):
+        correlation.append(np.corrcoef(data[[data.columns[0],data.columns[i]]].T)[0,1])
+    correlation = np.array(correlation)
+    sortedCorr = np.sort(np.abs(correlation))
+    sortedCorrIdx = np.argsort(np.abs(correlation))
+    cols = list(data.columns[sortedCorrIdx[sortedCorr>0.05]])     ## at least 5% correlation needed
+    return cols
+
 def prepDataForTraining(data):
-    predictorColNames = data.columns[1:]
+    predictorColNames = list(data.columns)
+    predictorColNames.remove('Severity')
     X = np.array(data[predictorColNames])
-    targetColNames = data.columns[0]
-    Y = np.array(data[data.columns[0]])
+    targetColNames = ['Severity']
+    Y = np.array(data['Severity'])
     dataDict = {'X':X,
                 'Y':Y,
                 'predictorNames':predictorColNames,
                 'targetName':targetColNames}
     return dataDict
 
-dataDict = prepDataForTraining(data)
-dataDictPreCovid = prepDataForTraining(dataPreCovid)
-dataDictPostCovid = prepDataForTraining(dataPostCovid)
+dataDict = prepDataForTraining(data[predictorsCorrelatedWithTarget(data)])
+dataDictPreCovid = prepDataForTraining(dataPreCovid[predictorsCorrelatedWithTarget(dataPreCovid)])
+dataDictPostCovid = prepDataForTraining(dataPostCovid[predictorsCorrelatedWithTarget(dataPostCovid)])
 
 
 if resampleDataBool != 0:
