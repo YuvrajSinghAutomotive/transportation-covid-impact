@@ -114,3 +114,96 @@ def plotBetaAccuracy(accuracy,numTestSamples):
     
 def credibleInterval():
     pass
+
+def bayesianSignificanceTest():
+    pass
+
+'''
+Performance Metrics
+'''
+def confusionMatrix(classificationTest,Ytest):
+    # classificationTest: numpy array or list
+    # Ytest: pandas Series or numpy array
+    # Confusion Matrix: predictedLabel (rows) and actualLabel (columns)
+    cMatrix = np.zeros(( len(Ytest.unique()) , len(Ytest.unique()) ))
+    for idxPredictedLabel,predictedLabel in enumerate(Ytest.unique()):
+        for idxActualLabel,actualLabel in enumerate(Ytest.unique()):
+            predForActualLabel = classificationTest[Ytest==actualLabel]
+            cMatrix[idxPredictedLabel,idxActualLabel] = np.sum(predForActualLabel == predictedLabel)
+    return cMatrix
+
+def metrics(M):
+    # M: confusion matrix: predictedLabel (rows) and actualLabel (columns)
+    overallAccuracy = np.sum(np.diag(M))/np.sum(M)
+    userAccuracy = []
+    producerAccuracy = []
+    for i in range(M.shape[0]):
+        userAccuracy.append(np.diag(M)[i]/np.sum(M[i,:]))
+    for j in range(M.shape[1]):
+        producerAccuracy.append(np.diag(M)[j]/np.sum(M[:,j]))
+    N = np.sum(M)
+    Mii = np.sum(np.diag(M))
+    sumMplus = 0
+    for i in range(M.shape[0]):
+        Miplus = np.sum(M[i,:])
+        Mplusi = np.sum(M[:,i])
+        sumMplus = sumMplus + Miplus*Mplusi
+    kappaCoeff = (N*Mii - sumMplus)/(N**2 - sumMplus)
+    return overallAccuracy, userAccuracy, producerAccuracy, kappaCoeff
+
+'''
+Exploration
+'''
+def corrMatrix(data,title='Correlation Matrix'):
+    dataNorm = ( data - data.mean() ) / data.std()
+    fig = plt.figure(figsize=(15,15),dpi=200)
+    plt.imshow(np.corrcoef(data.T),cmap='PiYG')
+    plt.colorbar(shrink=0.3)
+    plt.xticks(ticks=np.arange(len(data.columns)), labels=data.columns, fontsize=4, rotation=90)
+    plt.yticks(ticks=np.arange(len(data.columns)), labels=data.columns, fontsize=4)
+    plt.tight_layout()
+    plt.title(title)
+    plt.close()
+    return fig
+    
+def corrMatrixHighCorr(data,corrThresh=0.5,title='Correlation Matrix (Strong Correlations, absolute value > 0.5)'):
+    dataNorm = ( data - data.mean() ) / data.std()
+    fig = plt.figure(figsize=(15,15),dpi=200)
+    plt.imshow(np.abs(np.corrcoef(data.T))>corrThresh,cmap='gray')
+    plt.colorbar(shrink=0.3)
+    plt.xticks(ticks=np.arange(len(data.columns)), labels=data.columns, fontsize=4, rotation=90)
+    plt.yticks(ticks=np.arange(len(data.columns)), labels=data.columns, fontsize=4)
+    plt.tight_layout()
+    plt.title(title)
+    plt.close()
+    return fig
+
+'''
+Plot Functions
+'''
+def plotPredictorVsResponse(predictorsDataFrame,predictorName,actualResponse,predictedResponse,hueVarName,labels=['Pre-Covid','Post-Covid']):
+    fig,ax = plt.subplots(nrows=1,ncols=2,figsize=(10,3.5),dpi=100)
+    if type(hueVarName) != type(None):
+        hueVar = predictorsDataFrame[hueVarName].values
+        ax[0].scatter(predictorsDataFrame[predictorName].loc[hueVar==1],actualResponse[np.where(hueVar==1)]-0.1,label=labels[0],color='green') # ,edgecolors='k')
+        ax[0].scatter(predictorsDataFrame[predictorName].loc[hueVar==0],actualResponse[np.where(hueVar==0)]+0.1,label=labels[1],color='red') # ,edgecolors='k')
+        ax[0].legend(loc='lower left',ncol=2)
+    else:
+        ax[0].scatter(predictorsDataFrame[predictorName],actualResponse,color='green')
+    ax[0].set_xlabel(predictorName)
+    ax[0].set_ylabel('severity')
+    ax[0].set_yticks(np.arange(5))
+    ax[0].set_title('{} vs actual severity'.format(predictorName)) 
+    if type(hueVarName) != type(None):
+        ax[1].scatter(predictorsDataFrame[predictorName].loc[hueVar==1],predictedResponse[np.where(hueVar==1)]-0.1,label=labels[0],color='green') # ,edgecolors='k')
+        ax[1].scatter(predictorsDataFrame[predictorName].loc[hueVar==0],predictedResponse[np.where(hueVar==0)]+0.1,label=labels[1],color='red') # ,edgecolors='k')
+        ax[1].legend(loc='lower left',ncol=2)
+    else:
+        ax[1].scatter(predictorsDataFrame[predictorName],predictedResponse,color='green')    
+    ax[1].set_xlabel(predictorName)
+    ax[1].set_ylabel('severity')
+    ax[1].set_yticks(np.arange(5))
+    ax[1].set_title('{} vs predicted severity'.format(predictorName))
+    fig.tight_layout()
+    plt.close()
+    return fig

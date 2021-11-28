@@ -1,5 +1,7 @@
 from cleanData import cleanData
 import time
+import sys
+plotBool = sys.argv[2] if int(len(sys.argv)>2) else 0
 
 start = time.time()
 data,dataPreCovid,dataPostCovid = cleanData(verbose=0)
@@ -15,23 +17,27 @@ import matplotlib.pyplot as plt
 
 ## General regression and classification functions: validation
 from regressionLib import splitCV, plotBetaAccuracy
+from regressionLib import confusionMatrix, metrics
 
 ## Exploration and cluster analysis
 from sklearn.cluster import KMeans,MeanShift
+from regressionLib import corrMatrix, corrMatrixHighCorr
 
 ## Models
 from sklearn.linear_model import LogisticRegression
 
+## Plots
+from regressionLib import plotPredictorVsResponse
+
 
 '''
-Training models
+Data Dictionaries
 '''
 def prepDataForTraining(data):
     predictorColNames = data.columns[1:]
     X = np.array(data[predictorColNames])
     targetColNames = data.columns[0]
     Y = np.array(data[data.columns[0]])
-
     dataDict = {'X':X,
                 'Y':Y,
                 'predictorNames':predictorColNames,
@@ -42,6 +48,31 @@ dataDict = prepDataForTraining(data)
 dataDictPreCovid = prepDataForTraining(dataPreCovid)
 dataDictPostCovid = prepDataForTraining(dataPostCovid)
 
+'''
+Correlation matrix
+'''
+if plotBool==1:
+    predictors = pd.DataFrame(dataDict['X'], columns=dataDict['predictorNames'])
+    fig = corrMatrixHighCorr(predictors)
+    fig.savefig('Plots/CorrMatrixHighThresh.svg')
+    fig = corrMatrix(predictors)
+    fig.savefig('Plots/CorrMatrix.svg')
+
+    predictorsPreCovid = pd.DataFrame(dataDictPreCovid['X'], columns=dataDictPreCovid['predictorNames'])
+    fig = corrMatrixHighCorr(predictorsPreCovid)
+    fig.savefig('Plots/CorrMatrixHighThreshPreCovid.svg')
+    fig = corrMatrix(predictorsPreCovid)
+    fig.savefig('Plots/CorrMatrixPreCovid.svg')
+
+    predictorsPostCovid = pd.DataFrame(dataDictPostCovid['X'], columns=dataDictPostCovid['predictorNames'])
+    fig = corrMatrixHighCorr(predictorsPostCovid)
+    fig.savefig('Plots/CorrMatrixHighThreshPostCovid.svg')
+    fig = corrMatrix(predictorsPostCovid)
+    fig.savefig('Plots/CorrMatrixPostCovid.svg')
+
+'''
+Training models: Base model
+'''
 XTrain,XTest,YTrain,YTest,idxTrain,idxTest = splitCV(dataDict['X'],
                                                      dataDict['Y'],
                                                      returnIdx=True).testTrain(testRatio=0.5)
@@ -51,8 +82,10 @@ XTrainPreCovid,XTestPreCovid,YTrainPreCovid,YTestPreCovid,idxTrainPreCovid,idxTe
 XTrainPostCovid,XTestPostCovid,YTrainPostCovid,YTestPostCovid,idxTrainPostCovid,idxTestPostCovid = splitCV(dataDictPostCovid['X'], 
                                                                                                            dataDictPostCovid['Y'], 
                                                                                                            returnIdx=True).testTrain(testRatio=0.5)
-
-## base model: logistic regression
+'''
+Train Models and Test: Draw beta distribution of accuracy.
+## base model: logistic regression (location 0)
+'''
 Mdls = {'MdlName': ['Logistic Regression'],
         'Mdl': [ LogisticRegression(max_iter=500) ],
         'Predictions': [[]],
@@ -107,18 +140,42 @@ for i in range(len(MdlsPostCovid['Mdl'])):
                                                                                                                 XTest=XTestPostCovid,
                                                                                                                 YTest=YTestPostCovid)
 
-# pred = []
-# predPreCovid = []
-# predPostCovid = []
-# for i in range(YTest.shape[0]):
-#     pred.append(logisticRegr.predict(XTest[i].reshape(1,-1)))   ## Predict using Logistic Regression
-# for i in range(YTestPreCovid.shape[0]):
-#     predPreCovid.append(logisticRegrPreCovid.predict(XTestPreCovid[i].reshape(1,-1)))   ## Predict using Logistic Regression
-# for i in range(YTestPostCovid.shape[0]):
-#     predPostCovid.append(logisticRegrPostCovid.predict(XTestPostCovid[i].reshape(1,-1)))   ## Predict using Logistic Regression
+if plotBool==1:
+    predictorsTest = pd.DataFrame(XTest, columns=dataDict['predictorNames'])
+    for i in range(len(predictorsTest.columns)):
+        fig = plotPredictorVsResponse(predictorsDataFrame=predictorsTest,
+                                    predictorName=predictorsTest.columns[i],
+                                    actualResponse=YTest,
+                                    predictedResponse=Mdls['Predictions'][0],
+                                    hueVarName='preCovid',
+                                    labels=['Pre-Covid','Post-Covid'])
+        fig.savefig('./Plots/Logistic results/complete data/fig_{}.jpg'.format(i),dpi=300)
 
-# pred = np.array(pred).reshape(YTest.shape)
-# print('Logistic Regression Accuracy: {}'.format( np.mean(pred == YTest) ) )
+    predictorsTestPreCovid = pd.DataFrame(XTestPreCovid, columns=dataDictPreCovid['predictorNames'])
+    for i in range(len(predictorsTestPreCovid.columns)):
+        fig = plotPredictorVsResponse(predictorsDataFrame=predictorsTestPreCovid,
+                                    predictorName=predictorsTestPreCovid.columns[i],
+                                    actualResponse=YTestPreCovid,
+                                    predictedResponse=MdlsPreCovid['Predictions'][0],
+                                    hueVarName=None,
+                                    labels=['Pre-Covid','Post-Covid'])
+        fig.savefig('./Plots/Logistic results/preCovid/fig_{}.jpg'.format(i),dpi=300)
 
-# accuracy = np.mean(pred == YTest)
-# plotBetaAccuracy(accuracy,XTest.shape[0])
+cMatrix = confusionMatrix(classificationTest = Mdls['Predictions'][0],
+                          Ytest = pd.Series(YTest))
+overallAccuracy, userAccuracy, producerAccuracy, kappaCoeff = metrics(cMatrix)
+print('Overall Accuracy: {}'.format(np.round(overallAccuracy,3)))
+print("User's Accuracy: {}".format(np.round(userAccuracy,3)))
+print("Producer's Accuracy: {}".format(np.round(producerAccuracy,3)))
+print('Kappa Coefficient: {}'.format(np.round(kappaCoeff,6)))
+
+if plotBool==1:
+    cMatrixLabels = list(pd.Series(YTest).unique())
+    fig = plt.figure()
+    plt.imshow(cMatrix,cmap='gray')
+    plt.xticks(np.arange(len(cMatrixLabels)),labels=cMatrixLabels)
+    plt.yticks(np.arange(len(cMatrixLabels)),labels=cMatrixLabels)
+    plt.xlabel('Severity Class (Predicted)')
+    plt.ylabel('Severity Class (Actual)')
+    plt.colorbar()
+    plt.show()
