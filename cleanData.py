@@ -207,5 +207,10 @@ def cleanData(verbose):
             dataPostCovid = dataPostCovid.drop( columns=col )
         else:
             print('Column not found in dataPostCovid')
+    
+    ## not enough points with severity = 1
+    Y = data['Severity'].copy().values; Y[Y==1]=2; data['Severity'] = Y
+    Y = dataPreCovid['Severity'].copy().values; Y[Y==1]=2; dataPreCovid['Severity'] = Y
+    Y = dataPostCovid['Severity'].copy().values; Y[Y==1]=2; dataPostCovid['Severity'] = Y
 
     return data, dataPreCovid, dataPostCovid

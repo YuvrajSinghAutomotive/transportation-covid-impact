@@ -95,6 +95,35 @@ class splitCV:
                 else: splits.append( ( self.X[idxTrain],self.X[idxTest],self.Y[idxTrain],self.Y[idxTest],self.w[idxTrain],self.w[idxTest] ) )
         return splits
 
+def resampleData(dataDict):
+    X = pd.DataFrame(dataDict['X'],columns=dataDict['predictorNames'])
+    Y = dataDict['Y']   
+    lenClass = []
+    for className in np.unique(Y):
+        lenClass.append(len(np.where(Y==className)[0]))
+
+    N_class = np.ceil(0.9*min(lenClass)).astype(int)
+    resampledX = []
+    resampledY = []
+    for i,className in enumerate(np.unique(Y)):
+        randomNumbers = np.random.permutation(lenClass[i])[0:N_class]
+        resampledX.append(X[Y==className].iloc[randomNumbers])
+        resampledY.append(Y[Y==className][randomNumbers])
+
+    Xresampled = resampledX[0]
+    for i in range(len(np.unique(Y)))[1:]:
+        Xresampled = pd.concat((Xresampled,resampledX[i]),axis=0)
+    Yresampled = np.array(resampledY).reshape(-1,)
+
+    randomNumbers = np.random.permutation(len(Xresampled))
+    Xresampled = Xresampled.iloc[randomNumbers]
+    Yresampled = Yresampled[randomNumbers]
+    Xresampled = Xresampled.drop(columns = Xresampled.columns[np.where(Xresampled.std()==0)])
+    dataDict['X'] = np.array(Xresampled)
+    dataDict['Y'] = Yresampled
+    dataDict['predictorNames'] = Xresampled.columns
+    return dataDict
+
 '''
 Model Validation
 '''
