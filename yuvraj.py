@@ -179,3 +179,47 @@ if plotBool==1:
     plt.ylabel('Severity Class (Actual)')
     plt.colorbar()
     plt.show()
+
+
+
+##############################################################################################################################3
+'''
+Perceptron
+'''
+# from sklearn.linear_model import Perceptron
+
+# def predictPerceptron(Wx):
+#     predictions = []
+#     for val in Wx:
+#         if val>0: predictions.append(1)
+#         else: predictions.append(0)
+#     return predictions
+
+# ## One vs All perceptron multi-class classifier
+# YTrainDummies = pd.get_dummies(YTrainPreCovid)
+# YTestDummies = pd.get_dummies(YTestPreCovid)
+
+# perceptronDict = {'Classes':YTrainDummies.columns,
+#                   'Wx': [[]]*len(YTrainDummies.columns),
+#                   'Predictions': [[]]*len(YTrainDummies.columns)}
+
+# for i,targetClass in enumerate(YTrainDummies.columns):
+#     target = np.array( YTrainDummies[targetClass] )
+#     clf = Perceptron()
+#     clf.fit(XTrainPreCovid,target)
+#     W = clf.coef_
+#     Wx = (XTestPreCovid @ W.T).reshape(-1,)
+#     predictions = predictPerceptron(Wx)
+#     perceptronDict['Wx'][i] = Wx
+#     perceptronDict['Predictions'][i] = np.array(predictions)
+# WxBinary = np.array(perceptronDict['Wx']).T
+# predictionsBinary = np.array(perceptronDict['Predictions']).T
+
+# classification = []
+# Wx_pred = np.multiply(WxBinary,predictionsBinary)
+# for i in range(len(WxBinary)):
+#     classification.append(perceptronDict['Classes'][np.argmax(Wx_pred[i])])
+# classification = np.array(classification)
+
+# ## One vs One perceptron multiclass classifier
+
