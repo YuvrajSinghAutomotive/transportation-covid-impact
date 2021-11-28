@@ -144,21 +144,21 @@ if plotBool==1:
     predictorsTest = pd.DataFrame(XTest, columns=dataDict['predictorNames'])
     for i in range(len(predictorsTest.columns)):
         fig = plotPredictorVsResponse(predictorsDataFrame=predictorsTest,
-                                    predictorName=predictorsTest.columns[i],
-                                    actualResponse=YTest,
-                                    predictedResponse=Mdls['Predictions'][0],
-                                    hueVarName='preCovid',
-                                    labels=['Pre-Covid','Post-Covid'])
+                                      predictorName=predictorsTest.columns[i],
+                                      actualResponse=YTest,
+                                      predictedResponse=Mdls['Predictions'][0],
+                                      hueVarName='preCovid',
+                                      labels=['Pre-Covid','Post-Covid'])
         fig.savefig('./Plots/Logistic results/complete data/fig_{}.jpg'.format(i),dpi=300)
 
     predictorsTestPreCovid = pd.DataFrame(XTestPreCovid, columns=dataDictPreCovid['predictorNames'])
     for i in range(len(predictorsTestPreCovid.columns)):
         fig = plotPredictorVsResponse(predictorsDataFrame=predictorsTestPreCovid,
-                                    predictorName=predictorsTestPreCovid.columns[i],
-                                    actualResponse=YTestPreCovid,
-                                    predictedResponse=MdlsPreCovid['Predictions'][0],
-                                    hueVarName=None,
-                                    labels=['Pre-Covid','Post-Covid'])
+                                      predictorName=predictorsTestPreCovid.columns[i],
+                                      actualResponse=YTestPreCovid,
+                                      predictedResponse=MdlsPreCovid['Predictions'][0],
+                                      hueVarName=None,
+                                      labels=['Pre-Covid','Post-Covid'])
         fig.savefig('./Plots/Logistic results/preCovid/fig_{}.jpg'.format(i),dpi=300)
 
 cMatrix = confusionMatrix(classificationTest = Mdls['Predictions'][0],
@@ -181,8 +181,11 @@ if plotBool==1:
     plt.show()
 
 
+##############################################################################################################################
+# ## Count of classes
+# pd.get_dummies(YTrain).sum()
 
-##############################################################################################################################3
+##############################################################################################################################
 '''
 Perceptron
 '''
@@ -196,30 +199,92 @@ Perceptron
 #     return predictions
 
 # ## One vs All perceptron multi-class classifier
-# YTrainDummies = pd.get_dummies(YTrainPreCovid)
-# YTestDummies = pd.get_dummies(YTestPreCovid)
+# def perceptronOnevsAll(XTrain,YTrain,XTest,YTest):
+#     ## One vs All
+#     YTrainDummies = pd.get_dummies(YTrain)
+#     YTestDummies = pd.get_dummies(YTest)
 
-# perceptronDict = {'Classes':YTrainDummies.columns,
-#                   'Wx': [[]]*len(YTrainDummies.columns),
-#                   'Predictions': [[]]*len(YTrainDummies.columns)}
+#     perceptronDict = {'Classes':YTrainDummies.columns,
+#                       'Wx': [[]]*len(YTrainDummies.columns),
+#                       'Predictions': [[]]*len(YTrainDummies.columns)}
 
-# for i,targetClass in enumerate(YTrainDummies.columns):
-#     target = np.array( YTrainDummies[targetClass] )
-#     clf = Perceptron()
-#     clf.fit(XTrainPreCovid,target)
-#     W = clf.coef_
-#     Wx = (XTestPreCovid @ W.T).reshape(-1,)
-#     predictions = predictPerceptron(Wx)
-#     perceptronDict['Wx'][i] = Wx
-#     perceptronDict['Predictions'][i] = np.array(predictions)
-# WxBinary = np.array(perceptronDict['Wx']).T
-# predictionsBinary = np.array(perceptronDict['Predictions']).T
+#     for i,targetClass in enumerate(YTrainDummies.columns):
+#         target = np.array( YTrainDummies[targetClass] )
+#         clf = Perceptron()
+#         clf.fit(XTrain,target)
+#         W = clf.coef_
+#         Wx = (XTest @ W.T).reshape(-1,)
+#         predictions = predictPerceptron(Wx)
+#         perceptronDict['Wx'][i] = Wx
+#         perceptronDict['Predictions'][i] = np.array(predictions)
+#     WxBinary = np.array(perceptronDict['Wx']).T
+#     predictionsBinary = np.array(perceptronDict['Predictions']).T
 
-# classification = []
-# Wx_pred = np.multiply(WxBinary,predictionsBinary)
-# for i in range(len(WxBinary)):
-#     classification.append(perceptronDict['Classes'][np.argmax(Wx_pred[i])])
-# classification = np.array(classification)
+#     classification = []
+#     Wx_pred = np.multiply(WxBinary,predictionsBinary)
+#     for i in range(len(WxBinary)):
+#         classification.append(perceptronDict['Classes'][np.argmax(Wx_pred[i])])
+#     classification = np.array(classification)
+    
+#     cMatrix = confusionMatrix(classificationTest = classification,
+#                               Ytest = pd.Series(YTest))
+#     return perceptronDict, classification, cMatrix, metrics(cMatrix)
+
+# perceptronOnevsAll(XTrainPreCovid,YTrainPreCovid,XTestPreCovid,YTestPreCovid)
 
 # ## One vs One perceptron multiclass classifier
+# def perceptronOnevsOne(XTrain,YTrain,XTest,YTest):
+#     ## One vs One
+#     YTrainDummies = pd.get_dummies(YTrain)
+#     YTestDummies = pd.get_dummies(YTest)
 
+#     perceptronDict = {'Mdl':np.zeros((len(YTrainDummies.columns),len(YTrainDummies.columns)),dtype='object'),
+#                       'Wx': np.zeros((len(YTrainDummies.columns),len(YTrainDummies.columns)),dtype='object'),
+#                       'Predictions': np.zeros((len(YTrainDummies.columns),len(YTrainDummies.columns)),dtype='object')}
+
+#     for c1,label1 in enumerate(YTrainDummies.columns):
+#         for c2,label2 in enumerate(YTrainDummies.columns):
+#             if c1<c2:
+#                 y1 = YTrainDummies[YTrainDummies.columns[c1]]
+#                 y2 = YTrainDummies[YTrainDummies.columns[c2]]
+#                 y = y1.iloc[ list(np.where( ((y1==1).astype(int) + (y2==1).astype(int))==1 )[0]) ]
+#                 x = XTrain[list(y.index.astype(int))]
+#                 clf = Perceptron().fit(x,y)
+#                 perceptronDict['Mdl'][c1][c2] = clf
+#                 W = clf.coef_
+#                 Wx = (XTest @ W.T).reshape(-1,)
+#                 predictions = predictPerceptron(Wx)
+#                 perceptronDict['Wx'][c1][c2] = Wx
+#                 perceptronDict['Predictions'][c1][c2] = np.array(predictions)
+
+#     ## Predicitons from each model
+#     pred = pd.DataFrame(np.zeros(len(YTestDummies)))
+#     for c1,label1 in enumerate(YTestDummies.columns):
+#         for c2,label2 in enumerate(YTestDummies.columns):
+#             if c1<c2:
+#                 col = '{}_{}'.format(label1,label2)
+#                 pred[col] = perceptronDict['Mdl'][c1][c2].predict(XTest)
+#     pred = pred.drop(pred.columns[0],axis=1)
+
+#     ## Assign labels to every model's prediction
+#     predLabels = pred.copy()
+#     for c1,label1 in enumerate(YTestDummies.columns):
+#         for c2,label2 in enumerate(YTestDummies.columns):
+#             if c1<c2:
+#                 col = '{}_{}'.format(label1,label2)
+#                 vector = pred[col]
+#                 vector[vector==1] = label1
+#                 vector[vector==0] = label2
+#                 predLabels[col] = vector
+
+#     # Voting for classification
+#     classification = []
+#     from scipy.stats import mode
+#     for i in range(len(predLabels)):
+#         classification.append( ( mode(predLabels.iloc[i])[0].reshape(-1) )[0] )
+#     classification = np.array(classification)
+#     cMatrix = confusionMatrix(classificationTest = classification,
+#                                   Ytest = pd.Series(YTest))
+#     return perceptronDict, classification, cMatrix, metrics(cMatrix)
+
+# perceptronOnevsOne(XTrainPreCovid,YTrainPreCovid,XTestPreCovid,YTestPreCovid)
