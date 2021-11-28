@@ -332,5 +332,39 @@ def perceptronOnevsOne(XTrain,YTrain,XTest,YTest,plotcMatrix=True):
     return perceptronDict, classification, cMatrix, metrics(cMatrix),fig
 
 
-# perceptronOnevsAll(XTrainPreCovid,YTrainPreCovid,XTestPreCovid,YTestPreCovid)
-# perceptronOnevsOne(XTrainPreCovid,YTrainPreCovid,XTestPreCovid,YTestPreCovid)
+## Perceptrons
+def perceptronsTrainTest(XTrain,YTrain,XTest,YTest):
+    perceptrons = []
+
+    perceptronsDict = {'Binary Perceptrons': [],
+                    'Classification': [],
+                    'Confusion Matrix': [],
+                    'Confusion Matrix Metrics': [],
+                    'Confusion Matrix Plot': []}
+
+    perceptronsDict['Binary Perceptrons'], \
+    perceptronsDict['Classification'], \
+    perceptronsDict['Confusion Matrix'],\
+    perceptronsDict['Confusion Matrix Metrics'],\
+    perceptronsDict['Confusion Matrix Plot'] = perceptronOnevsAll(XTrain,YTrain,XTest,YTest)
+
+    perceptrons.append(perceptronsDict)
+
+    perceptronsDict = {'Binary Perceptrons': [],
+                    'Classification': [],
+                    'Confusion Matrix': [],
+                    'Confusion Matrix Metrics': [],
+                    'Confusion Matrix Plot': []}
+
+    perceptronsDict['Binary Perceptrons'], \
+    perceptronsDict['Classification'], \
+    perceptronsDict['Confusion Matrix'],\
+    perceptronsDict['Confusion Matrix Metrics'],\
+    perceptronsDict['Confusion Matrix Plot'] = perceptronOnevsOne(XTrain,YTrain,XTest,YTest)
+
+    perceptrons.append(perceptronsDict)
+    return perceptrons
+
+perceptrons = perceptronsTrainTest(XTrain,YTrain,XTest,YTest)
+perceptronsPreCovid = perceptronsTrainTest(XTrainPreCovid,YTrainPreCovid,XTestPreCovid,YTestPreCovid)
+perceptronsPostCovid = perceptronsTrainTest(XTrainPostCovid,YTrainPostCovid,XTestPostCovid,YTestPostCovid)
