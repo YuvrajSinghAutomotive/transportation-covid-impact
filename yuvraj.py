@@ -62,6 +62,15 @@ dataDict = prepDataForTraining(data[predictorsCorrelatedWithTarget(data)])
 dataDictPreCovid = prepDataForTraining(dataPreCovid[predictorsCorrelatedWithTarget(dataPreCovid)])
 dataDictPostCovid = prepDataForTraining(dataPostCovid[predictorsCorrelatedWithTarget(dataPostCovid)])
 
+## Mutual information between selected predictors and target
+from sklearn.feature_selection import mutual_info_classif
+def mutualInfoPredictorsTarget(dataDict):
+    MI = mutual_info_classif(dataDict['X'],dataDict['Y'])
+    return ['{}: {}'.format(name,MI[i]) for i,name in enumerate(dataDict['predictorNames']) ] 
+
+print('Mutual Information: data\n{}\n'.format( mutualInfoPredictorsTarget(dataDict) ) )
+print('Mutual Information: dataPreCovid\n{}\n'.format( mutualInfoPredictorsTarget(dataDictPreCovid) ) )
+print('Mutual Information: dataPostCovid\n{}\n'.format( mutualInfoPredictorsTarget(dataDictPostCovid) ) )
 
 if resampleDataBool != 0:
     from regressionLib import resampleData
@@ -204,15 +213,6 @@ if plotBool != 0:
         fig.savefig('./Plots/Logistic results/preCovid/fig_{}.jpg'.format(i),dpi=300)
 
 
-
-
-
-
-##############################################################################################################################
-# ## Count of classes
-# pd.get_dummies(YTrain).sum()
-
-##############################################################################################################################
 '''
 Perceptron
 '''
