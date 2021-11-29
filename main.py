@@ -25,6 +25,7 @@ import matplotlib.pyplot as plt
 ## General regression and classification functions: validation
 from regressionLib import splitCV, plotBetaAccuracy
 from regressionLib import confusionMatrix, metrics
+from regressionLib import flatten
 
 ## Exploration and cluster analysis
 from sklearn.cluster import KMeans,MeanShift
@@ -126,19 +127,19 @@ Train Models and Test: Draw beta distribution of accuracy.
 ## base model: logistic regression (location 0)
 ## All multiclass classifiers are declared here and fit(), predict() methods form sklearn model classes are used 
 '''
-Mdls = {'MdlName': ['Logistic Regression','Random Forest'],
+Mdls = {'MdlName': ['Logistic Regression','Random Forest: Bootstrap Aggregation',],
         'Mdl': [ LogisticRegression(max_iter=5000) , 
                  RandomForestClassifier(n_estimators=100,criterion='entropy',max_depth=10,min_samples_leaf=100,min_samples_split=150,bootstrap=True) ],
         'Predictions': np.zeros(shape=(2,),dtype='object'),
         'Confusion Matrix': np.zeros(shape=(2,),dtype='object') }
 
-MdlsPreCovid = {'MdlName': ['Logistic Regression: Pre-Covid','Random Forest: Pre-Covid'],
+MdlsPreCovid = {'MdlName': ['Logistic Regression: Pre-Covid','Random Forest: Bootstrap Aggregation: Pre-Covid'],
                 'Mdl':[LogisticRegression(max_iter=5000) ,
                        RandomForestClassifier(n_estimators=100,criterion='entropy',max_depth=10,min_samples_leaf=100,min_samples_split=150,bootstrap=True) ],
                 'Predictions': np.zeros(shape=(2,),dtype='object'),
                 'Confusion Matrix': np.zeros(shape=(2,),dtype='object') }
 
-MdlsPostCovid = {'MdlName': ['Logistic Regression: Post-Covid','Random Forest: Post-Covid'],
+MdlsPostCovid = {'MdlName': ['Logistic Regression: Post-Covid','Random Forest: Bootstrap Aggregation: Post-Covid'],
                 'Mdl':[LogisticRegression(max_iter=5000) ,
                        RandomForestClassifier(n_estimators=100,criterion='entropy',max_depth=10,min_samples_leaf=100,min_samples_split=150,bootstrap=True) ],
                 'Predictions': np.zeros(shape=(2,),dtype='object'),
@@ -169,19 +170,20 @@ def fitTestModel(Mdl,MdlName,XTrain,YTrain,XTest,YTest):
 
 def cMatrixPlots(cMatrixList,YTest,MdlNames):
     ## DO NOT CALL THIS FUNCTION IN SCRIPT. Use it only in jupyter to plot confusion matrices
-    fig,ax = plt.subplots(nrows=1,ncols=len(cMatrixList),figsize=(6*len(cMatrixList),5))
+    fig,axs = plt.subplots(nrows=2,ncols=np.ceil(len(cMatrixList)/2).astype(int),figsize=(3*len(cMatrixList),8))
+    ax = axs.reshape(-1)
     cMatrixLabels = list(pd.Series(YTest).unique())
     for i,cMatrix in enumerate(cMatrixList):
         img = ax[i].imshow(cMatrix,cmap='gray')
         ax[i].set_xticks(np.arange(len(cMatrixLabels)))
         ax[i].set_xticklabels(cMatrixLabels)
-        ax[i].set_xticks(np.arange(len(cMatrixLabels)))
-        ax[i].set_xticklabels(cMatrixLabels)
+        ax[i].set_yticks(np.arange(len(cMatrixLabels)))
+        ax[i].set_yticklabels(cMatrixLabels)
         ax[i].set_xlabel('Severity Class (Predicted)')
         ax[i].set_ylabel('Severity Class (Actual)')
         ax[i].set_title(MdlNames[i])
         fig.colorbar(mappable=img,ax = ax[i], fraction=0.1)
-        fig.tight_layout()
+    fig.tight_layout()
     return fig,ax
 
 for i in range(len(Mdls['Mdl'])):
