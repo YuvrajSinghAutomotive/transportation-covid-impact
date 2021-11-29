@@ -1,9 +1,14 @@
+'''
+Key take-away: feature engineering is important. Garbage in = Garbage Out
+'''
+
 from cleanData import cleanData
 import time
 import sys
 
 plotBool = int(sys.argv[1]) if len(sys.argv)>1 else 0
 resampleDataBool = int(sys.argv[2]) if len(sys.argv)>2 else 1
+MISelectorBool = int(sys.argv[3]) if len(sys.argv)>3 else 0
 
 start = time.time()
 data,dataPreCovid,dataPostCovid = cleanData(verbose=0)
@@ -26,7 +31,9 @@ from sklearn.cluster import KMeans,MeanShift
 from regressionLib import corrMatrix, corrMatrixHighCorr
 
 ## Models
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression,Perceptron
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.tree import DecisionTreeClassifier
 
 ## Plots
 from regressionLib import plotPredictorVsResponse
@@ -63,21 +70,22 @@ dataDictPreCovid = prepDataForTraining(dataPreCovid[predictorsCorrelatedWithTarg
 dataDictPostCovid = prepDataForTraining(dataPostCovid[predictorsCorrelatedWithTarget(dataPostCovid)])
 
 ## Mutual information between selected predictors and target
+# Mutual information: MI(X,Y) = Dkl( P(X,Y) || Px \crossproduct Py)
 from sklearn.feature_selection import mutual_info_classif
 def mutualInfoPredictorsTarget(dataDict):
     MI = mutual_info_classif(dataDict['X'],dataDict['Y'])
     return ['{}: {}'.format(name,MI[i]) for i,name in enumerate(dataDict['predictorNames']) ] 
 
-print('Mutual Information: data\n{}\n'.format( mutualInfoPredictorsTarget(dataDict) ) )
-print('Mutual Information: dataPreCovid\n{}\n'.format( mutualInfoPredictorsTarget(dataDictPreCovid) ) )
-print('Mutual Information: dataPostCovid\n{}\n'.format( mutualInfoPredictorsTarget(dataDictPostCovid) ) )
+if MISelectorBool != 0:
+    print('Mutual Information: data\n{}\n'.format( mutualInfoPredictorsTarget(dataDict) ) )
+    print('Mutual Information: dataPreCovid\n{}\n'.format( mutualInfoPredictorsTarget(dataDictPreCovid) ) )
+    print('Mutual Information: dataPostCovid\n{}\n'.format( mutualInfoPredictorsTarget(dataDictPostCovid) ) )
 
 if resampleDataBool != 0:
     from regressionLib import resampleData
     dataDict = resampleData(dataDict)
     dataDictPreCovid = resampleData(dataDictPreCovid)
     dataDictPostCovid = resampleData(dataDictPostCovid)
-
 
 '''
 Correlation matrix
@@ -116,27 +124,28 @@ XTrainPostCovid,XTestPostCovid,YTrainPostCovid,YTestPostCovid,idxTrainPostCovid,
 '''
 Train Models and Test: Draw beta distribution of accuracy.
 ## base model: logistic regression (location 0)
+## All multiclass classifiers are declared here and fit(), predict() methods form sklearn model classes are used 
 '''
-Mdls = {'MdlName': ['Logistic Regression'],
-        'Mdl': [ LogisticRegression(max_iter=5000) ],
-        'Predictions': [[]],
-        'Confusion Matrix': [[]],
-        'Confusion Matrix Plot': [[]] }
+Mdls = {'MdlName': ['Logistic Regression','Random Forest'],
+        'Mdl': [ LogisticRegression(max_iter=5000) , 
+                 RandomForestClassifier(n_estimators=100,criterion='entropy',max_depth=10,min_samples_leaf=100,min_samples_split=150,bootstrap=True) ],
+        'Predictions': np.zeros(shape=(2,),dtype='object'),
+        'Confusion Matrix': np.zeros(shape=(2,),dtype='object') }
 
-MdlsPreCovid = {'MdlName': ['Logistic Regression: Pre-Covid'],
-                'Mdl':[LogisticRegression(max_iter=5000)],
-                'Predictions': [[]],
-                'Confusion Matrix': [[]],
-                'Confusion Matrix Plot': [[]] }
+MdlsPreCovid = {'MdlName': ['Logistic Regression: Pre-Covid','Random Forest: Pre-Covid'],
+                'Mdl':[LogisticRegression(max_iter=5000) ,
+                       RandomForestClassifier(n_estimators=100,criterion='entropy',max_depth=10,min_samples_leaf=100,min_samples_split=150,bootstrap=True) ],
+                'Predictions': np.zeros(shape=(2,),dtype='object'),
+                'Confusion Matrix': np.zeros(shape=(2,),dtype='object') }
 
-MdlsPostCovid = {'MdlName': ['Logistic Regression: Post-Covid'],
-                'Mdl':[LogisticRegression(max_iter=5000)],
-                'Predictions': [[]],
-                'Confusion Matrix': [[]],
-                'Confusion Matrix Plot': [[]] }
+MdlsPostCovid = {'MdlName': ['Logistic Regression: Post-Covid','Random Forest: Post-Covid'],
+                'Mdl':[LogisticRegression(max_iter=5000) ,
+                       RandomForestClassifier(n_estimators=100,criterion='entropy',max_depth=10,min_samples_leaf=100,min_samples_split=150,bootstrap=True) ],
+                'Predictions': np.zeros(shape=(2,),dtype='object'),
+                'Confusion Matrix': np.zeros(shape=(2,),dtype='object') }
 
 
-def fitTestModel(Mdl,MdlName,XTrain,YTrain,XTest,YTest,plotcMatrix=True):
+def fitTestModel(Mdl,MdlName,XTrain,YTrain,XTest,YTest):
     start = time.time()
     Mdl.fit(XTrain, YTrain)
     end = time.time()
@@ -156,39 +165,41 @@ def fitTestModel(Mdl,MdlName,XTrain,YTrain,XTest,YTest,plotcMatrix=True):
     print("User's Accuracy: {}".format(np.round(userAccuracy,3)))
     print("Producer's Accuracy: {}".format(np.round(producerAccuracy,3)))
     print('Kappa Coefficient: {}\n'.format(np.round(kappaCoeff,6)))
+    return Mdl,pred,cMatrix
 
-    if plotcMatrix:
-        fig = plt.figure()
-        cMatrixLabels = list(pd.Series(YTest).unique())
-        plt.imshow(cMatrix,cmap='gray')
-        plt.xticks(np.arange(len(cMatrixLabels)),labels=cMatrixLabels)
-        plt.yticks(np.arange(len(cMatrixLabels)),labels=cMatrixLabels)
-        plt.xlabel('Severity Class (Predicted)')
-        plt.ylabel('Severity Class (Actual)')
-        plt.colorbar()
-        plt.close()
-
-    return Mdl,pred,cMatrix,fig
+def cMatrixPlots(cMatrixList,YTest,MdlNames):
+    ## DO NOT CALL THIS FUNCTION IN SCRIPT. Use it only in jupyter to plot confusion matrices
+    fig,ax = plt.subplots(nrows=1,ncols=len(cMatrixList),figsize=(6*len(cMatrixList),5))
+    cMatrixLabels = list(pd.Series(YTest).unique())
+    for i,cMatrix in enumerate(cMatrixList):
+        img = ax[i].imshow(cMatrix,cmap='gray')
+        ax[i].set_xticks(np.arange(len(cMatrixLabels)))
+        ax[i].set_xticklabels(cMatrixLabels)
+        ax[i].set_xticks(np.arange(len(cMatrixLabels)))
+        ax[i].set_xticklabels(cMatrixLabels)
+        ax[i].set_xlabel('Severity Class (Predicted)')
+        ax[i].set_ylabel('Severity Class (Actual)')
+        ax[i].set_title(MdlNames[i])
+        fig.colorbar(mappable=img,ax = ax[i], fraction=0.1)
+        fig.tight_layout()
+    return fig,ax
 
 for i in range(len(Mdls['Mdl'])):
     Mdls['Mdl'][i] , \
     Mdls['Predictions'][i], \
-    Mdls['Confusion Matrix'][i], \
-    Mdls['Confusion Matrix Plot'][i] = fitTestModel(Mdl=Mdls['Mdl'][i],MdlName=Mdls['MdlName'][i], 
+    Mdls['Confusion Matrix'][i] = fitTestModel(Mdl=Mdls['Mdl'][i],MdlName=Mdls['MdlName'][i], 
                                                     XTrain=XTrain, YTrain=YTrain, XTest=XTest, YTest=YTest)
 
 for i in range(len(MdlsPreCovid['Mdl'])):
     MdlsPreCovid['Mdl'][i] , \
     MdlsPreCovid['Predictions'][i], \
-    MdlsPreCovid['Confusion Matrix'][i], \
-    MdlsPreCovid['Confusion Matrix Plot'][i] = fitTestModel(Mdl=MdlsPreCovid['Mdl'][i],MdlName=MdlsPreCovid['MdlName'][i], 
+    MdlsPreCovid['Confusion Matrix'][i] = fitTestModel(Mdl=MdlsPreCovid['Mdl'][i],MdlName=MdlsPreCovid['MdlName'][i], 
                                                             XTrain=XTrainPreCovid, YTrain=YTrainPreCovid, XTest=XTestPreCovid, YTest=YTestPreCovid)
 
 for i in range(len(MdlsPostCovid['Mdl'])):
     MdlsPostCovid['Mdl'][i] , \
     MdlsPostCovid['Predictions'][i], \
-    MdlsPostCovid['Confusion Matrix'][i], \
-    MdlsPostCovid['Confusion Matrix Plot'][i] = fitTestModel(Mdl=MdlsPostCovid['Mdl'][i],MdlName=MdlsPostCovid['MdlName'][i], 
+    MdlsPostCovid['Confusion Matrix'][i] = fitTestModel(Mdl=MdlsPostCovid['Mdl'][i],MdlName=MdlsPostCovid['MdlName'][i], 
                                                              XTrain=XTrainPostCovid, YTrain=YTrainPostCovid, XTest=XTestPostCovid, YTest=YTestPostCovid)
 
 if plotBool != 0:
@@ -216,8 +227,6 @@ if plotBool != 0:
 '''
 Perceptron
 '''
-from sklearn.linear_model import Perceptron
-
 def predictPerceptron(Wx):
     predictions = []
     for val in Wx:
