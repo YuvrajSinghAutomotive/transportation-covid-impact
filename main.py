@@ -35,6 +35,7 @@ from regressionLib import corrMatrix, corrMatrixHighCorr
 from sklearn.linear_model import LogisticRegression,Perceptron
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.neural_network import MLPClassifier
 
 ## Plots
 from regressionLib import plotPredictorVsResponse
@@ -66,6 +67,33 @@ def prepDataForTraining(data):
                 'targetName':targetColNames}
     return dataDict
 
+#################################################################################################################
+# ### TEMP CODE: DELETE LATER
+# dataDict = prepDataForTraining(data)
+# dataDictPreCovid = prepDataForTraining(dataPreCovid)
+# dataDictPostCovid = prepDataForTraining(dataPostCovid)
+
+# # Correlation matrix: ALL VARIABLES
+# if plotBool == 0:
+#     predictors = pd.DataFrame(dataDict['X'], columns=dataDict['predictorNames'])
+#     fig = corrMatrixHighCorr(predictors)
+#     fig.savefig('Plots/CorrMatrixHighThreshRAW.svg')
+#     fig = corrMatrix(predictors)
+#     fig.savefig('Plots/CorrMatrixRAW.svg')
+
+#     predictorsPreCovid = pd.DataFrame(dataDictPreCovid['X'], columns=dataDictPreCovid['predictorNames'])
+#     fig = corrMatrixHighCorr(predictorsPreCovid)
+#     fig.savefig('Plots/CorrMatrixHighThreshPreCovidRAW.svg')
+#     fig = corrMatrix(predictorsPreCovid)
+#     fig.savefig('Plots/CorrMatrixPreCovidRAW.svg')
+
+#     predictorsPostCovid = pd.DataFrame(dataDictPostCovid['X'], columns=dataDictPostCovid['predictorNames'])
+#     fig = corrMatrixHighCorr(predictorsPostCovid)
+#     fig.savefig('Plots/CorrMatrixHighThreshPostCovidRAW.svg')
+#     fig = corrMatrix(predictorsPostCovid)
+#     fig.savefig('Plots/CorrMatrixPostCovidRAW.svg')
+# #################################################################################################################
+
 dataDict = prepDataForTraining(data[predictorsCorrelatedWithTarget(data)])
 dataDictPreCovid = prepDataForTraining(dataPreCovid[predictorsCorrelatedWithTarget(dataPreCovid)])
 dataDictPostCovid = prepDataForTraining(dataPostCovid[predictorsCorrelatedWithTarget(dataPostCovid)])
@@ -89,26 +117,30 @@ if resampleDataBool != 0:
     dataDictPostCovid = resampleData(dataDictPostCovid)
 
 '''
-Correlation matrix
+Correlation matrix: Features
 '''
 if plotBool != 0:
     predictors = pd.DataFrame(dataDict['X'], columns=dataDict['predictorNames'])
     fig = corrMatrixHighCorr(predictors)
-    fig.savefig('Plots/CorrMatrixHighThresh.svg')
+    fig.savefig('Plots/CorrMatrixHighThreshfeat.svg')
     fig = corrMatrix(predictors)
-    fig.savefig('Plots/CorrMatrix.svg')
+    fig.savefig('Plots/CorrMatrixfeat.svg')
 
     predictorsPreCovid = pd.DataFrame(dataDictPreCovid['X'], columns=dataDictPreCovid['predictorNames'])
     fig = corrMatrixHighCorr(predictorsPreCovid)
-    fig.savefig('Plots/CorrMatrixHighThreshPreCovid.svg')
+    fig.savefig('Plots/CorrMatrixHighThreshPreCovidfeat.svg')
     fig = corrMatrix(predictorsPreCovid)
-    fig.savefig('Plots/CorrMatrixPreCovid.svg')
+    fig.savefig('Plots/CorrMatrixPreCovidfeat.svg')
 
     predictorsPostCovid = pd.DataFrame(dataDictPostCovid['X'], columns=dataDictPostCovid['predictorNames'])
     fig = corrMatrixHighCorr(predictorsPostCovid)
-    fig.savefig('Plots/CorrMatrixHighThreshPostCovid.svg')
+    fig.savefig('Plots/CorrMatrixHighThreshPostCovidfeat.svg')
     fig = corrMatrix(predictorsPostCovid)
-    fig.savefig('Plots/CorrMatrixPostCovid.svg')
+    fig.savefig('Plots/CorrMatrixPostCovidfeat.svg')
+
+# #############################################################################
+# sys.exit("Just wanted correlation matrices lol")
+# #############################################################################
 
 '''
 Training models: Base model
@@ -127,23 +159,38 @@ Train Models and Test: Draw beta distribution of accuracy.
 ## base model: logistic regression (location 0)
 ## All multiclass classifiers are declared here and fit(), predict() methods form sklearn model classes are used 
 '''
-Mdls = {'MdlName': ['Logistic Regression','Random Forest: Bootstrap Aggregation',],
+Mdls = {'MdlName': ['Logistic Regression',
+                    'Random Forest: Bootstrap Aggregation',
+                    'Random Forest: AdaBoost',
+                    'Neural Network: 3 hidden layers, 50 hidden units'],
         'Mdl': [ LogisticRegression(max_iter=5000) , 
-                 RandomForestClassifier(n_estimators=100,criterion='entropy',max_depth=10,min_samples_leaf=100,min_samples_split=150,bootstrap=True) ],
-        'Predictions': np.zeros(shape=(2,),dtype='object'),
-        'Confusion Matrix': np.zeros(shape=(2,),dtype='object') }
+                 RandomForestClassifier(n_estimators=100,criterion='entropy',max_depth=10,min_samples_leaf=100,min_samples_split=150,bootstrap=True),
+                 AdaBoostClassifier(base_estimator = DecisionTreeClassifier(criterion='entropy',max_depth=5) , n_estimators=50, learning_rate=1),
+                 MLPClassifier(hidden_layer_sizes=(50,50,50,), alpha=0.1 , max_iter=2000, activation = 'logistic', solver='adam') ],
+        'Predictions': np.zeros(shape=(4,),dtype='object'),
+        'Confusion Matrix': np.zeros(shape=(4,),dtype='object') }
 
-MdlsPreCovid = {'MdlName': ['Logistic Regression: Pre-Covid','Random Forest: Bootstrap Aggregation: Pre-Covid'],
+MdlsPreCovid = {'MdlName': ['Logistic Regression: Pre-Covid',
+                            'Random Forest: Bootstrap Aggregation: Pre-Covid',
+                            'Random Forest: AdaBoost: Pre-Covid',
+                            'Neural Network: 3 hidden layers, 10 hidden units'],
                 'Mdl':[LogisticRegression(max_iter=5000) ,
-                       RandomForestClassifier(n_estimators=100,criterion='entropy',max_depth=10,min_samples_leaf=100,min_samples_split=150,bootstrap=True) ],
-                'Predictions': np.zeros(shape=(2,),dtype='object'),
-                'Confusion Matrix': np.zeros(shape=(2,),dtype='object') }
+                       RandomForestClassifier(n_estimators=100,criterion='entropy',max_depth=10,min_samples_leaf=100,min_samples_split=150,bootstrap=True),
+                       AdaBoostClassifier(base_estimator = DecisionTreeClassifier(criterion='entropy',max_depth=5) , n_estimators=50, learning_rate=1),
+                       MLPClassifier(hidden_layer_sizes=(50,50,50,), alpha=0.1 , max_iter=2000, activation = 'logistic', solver='adam') ],
+                'Predictions': np.zeros(shape=(4,),dtype='object'),
+                'Confusion Matrix': np.zeros(shape=(4,),dtype='object') }
 
-MdlsPostCovid = {'MdlName': ['Logistic Regression: Post-Covid','Random Forest: Bootstrap Aggregation: Post-Covid'],
+MdlsPostCovid = {'MdlName': ['Logistic Regression: Post-Covid',
+                             'Random Forest: Bootstrap Aggregation: Post-Covid',
+                             'Random Forest: AdaBoost: Post-Covid',
+                             'Neural Network: 3 hidden layers, 10 hidden units'],
                 'Mdl':[LogisticRegression(max_iter=5000) ,
-                       RandomForestClassifier(n_estimators=100,criterion='entropy',max_depth=10,min_samples_leaf=100,min_samples_split=150,bootstrap=True) ],
-                'Predictions': np.zeros(shape=(2,),dtype='object'),
-                'Confusion Matrix': np.zeros(shape=(2,),dtype='object') }
+                       RandomForestClassifier(n_estimators=100,criterion='entropy',max_depth=10,min_samples_leaf=100,min_samples_split=150,bootstrap=True),
+                       AdaBoostClassifier(base_estimator = DecisionTreeClassifier(criterion='entropy',max_depth=5) , n_estimators=50, learning_rate=1),
+                       MLPClassifier(hidden_layer_sizes=(50,50,50,), alpha=0.1 , max_iter=2000, activation = 'logistic', solver='adam')  ],
+                'Predictions': np.zeros(shape=(4,),dtype='object'),
+                'Confusion Matrix': np.zeros(shape=(4,),dtype='object') }
 
 
 def fitTestModel(Mdl,MdlName,XTrain,YTrain,XTest,YTest):
@@ -166,6 +213,7 @@ def fitTestModel(Mdl,MdlName,XTrain,YTrain,XTest,YTest):
     print("User's Accuracy: {}".format(np.round(userAccuracy,3)))
     print("Producer's Accuracy: {}".format(np.round(producerAccuracy,3)))
     print('Kappa Coefficient: {}\n'.format(np.round(kappaCoeff,6)))
+    print('########################################################\n')
     return Mdl,pred,cMatrix
 
 def cMatrixPlots(cMatrixList,YTest,MdlNames):
@@ -173,15 +221,20 @@ def cMatrixPlots(cMatrixList,YTest,MdlNames):
     fig,axs = plt.subplots(nrows=2,ncols=np.ceil(len(cMatrixList)/2).astype(int),figsize=(3*len(cMatrixList),8))
     ax = axs.reshape(-1)
     cMatrixLabels = list(pd.Series(YTest).unique())
+    if len(cMatrixList)<=1:
+        ax = [ax]
     for i,cMatrix in enumerate(cMatrixList):
         img = ax[i].imshow(cMatrix,cmap='gray')
         ax[i].set_xticks(np.arange(len(cMatrixLabels)))
         ax[i].set_xticklabels(cMatrixLabels)
         ax[i].set_yticks(np.arange(len(cMatrixLabels)))
         ax[i].set_yticklabels(cMatrixLabels)
-        ax[i].set_xlabel('Severity Class (Predicted)')
-        ax[i].set_ylabel('Severity Class (Actual)')
+        ax[i].set_xlabel('Severity Class (Actual)')
+        ax[i].set_ylabel('Severity Class (Predicted)')
         ax[i].set_title(MdlNames[i])
+        for j in range(len(cMatrixLabels)):
+            for k in range(len(cMatrixLabels)):
+                ax[i].text(j-0.25,k,int(cMatrix[k,j]),color='blue',fontweight='semibold',fontsize=18)
         fig.colorbar(mappable=img,ax = ax[i], fraction=0.1)
     fig.tight_layout()
     return fig,ax
@@ -237,7 +290,7 @@ def predictPerceptron(Wx):
     return predictions
 
 ## One vs All perceptron multi-class classifier
-def perceptronOnevsAll(XTrain,YTrain,XTest,YTest,plotcMatrix=True):
+def perceptronOnevsAll(XTrain,YTrain,XTest,YTest):
     ## One vs All
     YTrainDummies = pd.get_dummies(YTrain)
     YTestDummies = pd.get_dummies(YTest)
@@ -272,20 +325,10 @@ def perceptronOnevsAll(XTrain,YTrain,XTest,YTest,plotcMatrix=True):
     print("Producer's Accuracy: {}".format(np.round(producerAccuracy,3)))
     print('Kappa Coefficient: {}\n'.format(np.round(kappaCoeff,6)))
 
-    if plotcMatrix:
-        fig = plt.figure()
-        cMatrixLabels = list(pd.Series(YTest).unique())
-        plt.imshow(cMatrix,cmap='gray')
-        plt.xticks(np.arange(len(cMatrixLabels)),labels=cMatrixLabels)
-        plt.yticks(np.arange(len(cMatrixLabels)),labels=cMatrixLabels)
-        plt.xlabel('Severity Class (Predicted)')
-        plt.ylabel('Severity Class (Actual)')
-        plt.colorbar()
-        plt.close()
-    return perceptronDict, classification, cMatrix, metrics(cMatrix),fig
+    return perceptronDict, classification, cMatrix, metrics(cMatrix)
 
 ## One vs One perceptron multiclass classifier
-def perceptronOnevsOne(XTrain,YTrain,XTest,YTest,plotcMatrix=True):
+def perceptronOnevsOne(XTrain,YTrain,XTest,YTest):
     ## One vs One
     YTrainDummies = pd.get_dummies(YTrain)
     YTestDummies = pd.get_dummies(YTest)
@@ -343,52 +386,164 @@ def perceptronOnevsOne(XTrain,YTrain,XTest,YTest,plotcMatrix=True):
     print("Producer's Accuracy: {}".format(np.round(producerAccuracy,3)))
     print('Kappa Coefficient: {}\n'.format(np.round(kappaCoeff,6)))
 
-    if plotcMatrix:
-        fig = plt.figure()
-        cMatrixLabels = list(pd.Series(YTest).unique())
-        plt.imshow(cMatrix,cmap='gray')
-        plt.xticks(np.arange(len(cMatrixLabels)),labels=cMatrixLabels)
-        plt.yticks(np.arange(len(cMatrixLabels)),labels=cMatrixLabels)
-        plt.xlabel('Severity Class (Predicted)')
-        plt.ylabel('Severity Class (Actual)')
-        plt.colorbar()
-        plt.close()
-    return perceptronDict, classification, cMatrix, metrics(cMatrix),fig
+    return perceptronDict, classification, cMatrix, metrics(cMatrix)
 
 
 ## Perceptrons
 def perceptronsTrainTest(XTrain,YTrain,XTest,YTest):
+    
     perceptrons = []
-
+    print('One vs All')
     perceptronsDict = {'Binary Perceptrons': [],
                     'Classification': [],
                     'Confusion Matrix': [],
-                    'Confusion Matrix Metrics': [],
-                    'Confusion Matrix Plot': []}
+                    'Confusion Matrix Metrics': []}
 
     perceptronsDict['Binary Perceptrons'], \
     perceptronsDict['Classification'], \
     perceptronsDict['Confusion Matrix'],\
-    perceptronsDict['Confusion Matrix Metrics'],\
-    perceptronsDict['Confusion Matrix Plot'] = perceptronOnevsAll(XTrain,YTrain,XTest,YTest)
+    perceptronsDict['Confusion Matrix Metrics'] = perceptronOnevsAll(XTrain,YTrain,XTest,YTest)
 
     perceptrons.append(perceptronsDict)
 
+    print('One vs One')
     perceptronsDict = {'Binary Perceptrons': [],
                     'Classification': [],
                     'Confusion Matrix': [],
-                    'Confusion Matrix Metrics': [],
-                    'Confusion Matrix Plot': []}
+                    'Confusion Matrix Metrics': []}
 
     perceptronsDict['Binary Perceptrons'], \
     perceptronsDict['Classification'], \
     perceptronsDict['Confusion Matrix'],\
-    perceptronsDict['Confusion Matrix Metrics'],\
-    perceptronsDict['Confusion Matrix Plot'] = perceptronOnevsOne(XTrain,YTrain,XTest,YTest)
+    perceptronsDict['Confusion Matrix Metrics'] = perceptronOnevsOne(XTrain,YTrain,XTest,YTest)
 
     perceptrons.append(perceptronsDict)
     return perceptrons
 
+print('Perceptrons')
 perceptrons = perceptronsTrainTest(XTrain,YTrain,XTest,YTest)
+print('Perceptrons: Pre-Covid Data')
 perceptronsPreCovid = perceptronsTrainTest(XTrainPreCovid,YTrainPreCovid,XTestPreCovid,YTestPreCovid)
+print('Perceptrons: Post-Covid Data')
 perceptronsPostCovid = perceptronsTrainTest(XTrainPostCovid,YTrainPostCovid,XTestPostCovid,YTestPostCovid)
+
+# #############################################################################
+# sys.exit("Just wanted correlation matrices lol")
+# #############################################################################
+
+from sklearn.svm import SVC
+## One vs All SVC multi-class classifier
+def svcOnevsAll(XTrain,YTrain,XTest,YTest):
+    YTrain_dummies = pd.get_dummies(YTrain)
+    binaryClassifiers = []
+    for c,label in enumerate(YTrain_dummies.columns):
+        clf = SVC(probability=True).fit(XTrain,YTrain_dummies[YTrain_dummies.columns[c]])
+        binaryClassifiers.append(clf)
+
+    predictions = []
+    for clf in binaryClassifiers:
+        predictions.append(clf.predict_proba(XTest))
+    predProb = np.array(predictions).T
+
+    classification = []
+    for pred in predProb[1]:
+        classification.append(YTrain_dummies.columns[np.where(pred==max(pred))[0][0]])
+    classification = np.array(classification).reshape(-1)
+
+    cMatrix = confusionMatrix(classificationTest = classification,
+                              Ytest = pd.Series(YTest))
+    overallAccuracy, userAccuracy, producerAccuracy, kappaCoeff = metrics(cMatrix)
+    print('Overall Accuracy: {}'.format(np.round(overallAccuracy,3)))
+    print("User's Accuracy: {}".format(np.round(userAccuracy,3)))
+    print("Producer's Accuracy: {}".format(np.round(producerAccuracy,3)))
+    print('Kappa Coefficient: {}\n'.format(np.round(kappaCoeff,6)))
+    
+    svcDict = {'Binary Classifiers': binaryClassifiers,
+               'Predictions': classification,
+               'Confusion Matrix': cMatrix,
+               'Confusion Matrix Metrics': metrics(cMatrix)}
+    return svcDict
+
+## One vs One SVC multi-class classifier
+def svcOnevsOne(XTrain,YTrain,XTest,YTest):
+    YTrain_dummies = pd.get_dummies(YTrain)
+    YTest_dummies = pd.get_dummies(YTest)
+    binaryClassifiers = np.empty((len(YTrain_dummies.columns),len(YTrain_dummies.columns)), dtype='object')
+    for c1,label1 in enumerate(YTrain_dummies.columns):
+        for c2,label2 in enumerate(YTrain_dummies.columns):
+            if c1<c2:
+                y1 = YTrain_dummies[YTrain_dummies.columns[c1]]
+                y2 = YTrain_dummies[YTrain_dummies.columns[c2]]
+                y = y1.iloc[ list(np.where( ((y1==1).astype(int) + (y2==1).astype(int))==1 )[0]) ]
+                x = XTrain[list(y.index.astype(int))]
+                clf = SVC(probability=False).fit(x,y)
+                binaryClassifiers[c1][c2] = clf
+
+    ## Predicitons from each model
+    pred = pd.DataFrame(np.zeros(len(YTest_dummies)))
+    for c1,label1 in enumerate(YTrain_dummies.columns):
+        for c2,label2 in enumerate(YTrain_dummies.columns):
+            if c1<c2:
+                col = '{}_{}'.format(label1,label2)
+                pred[col] = binaryClassifiers[c1][c2].predict(XTest)
+    pred = pred.drop(pred.columns[0],axis=1)
+
+    ## Assign labels to every model's prediction
+    predLabels = pred.copy()
+    for c1,label1 in enumerate(YTrain_dummies.columns):
+        for c2,label2 in enumerate(YTrain_dummies.columns):
+            if c1<c2:
+                col = '{}_{}'.format(label1,label2)
+                vector = pred[col]
+                vector[vector==1] = label1
+                vector[vector==0] = label2
+                predLabels[col] = vector
+
+    # Voting for classification
+    classification = pd.DataFrame(np.zeros(len(predLabels)),columns=['CLS'])
+    from scipy.stats import mode
+    for i in range(len(predLabels)):
+        classification.iloc[i] = ( mode(predLabels.iloc[i])[0].reshape(-1) )[0]
+    
+    cMatrix = confusionMatrix(classificationTest = classification,
+                              Ytest = pd.Series(YTest))
+    overallAccuracy, userAccuracy, producerAccuracy, kappaCoeff = metrics(cMatrix)
+    print('Overall Accuracy: {}'.format(np.round(overallAccuracy,3)))
+    print("User's Accuracy: {}".format(np.round(userAccuracy,3)))
+    print("Producer's Accuracy: {}".format(np.round(producerAccuracy,3)))
+    print('Kappa Coefficient: {}\n'.format(np.round(kappaCoeff,6)))
+    
+    svcDict = {'Binary Classifiers': binaryClassifiers,
+               'Predictions': classification,
+               'Confusion Matrix': cMatrix,
+               'Confusion Matrix Metrics': metrics(cMatrix)}
+    return svcDict
+
+#################
+print('SVM: One vs All')
+randomNumbers = np.random.permutation(len(XTrain))
+XTrainSVM = XTrain[randomNumbers[0:10000]]
+YTrainSVM = YTrain[randomNumbers[0:10000]]
+svcOnevsAllDict = svcOnevsAll(XTrainSVM,YTrainSVM,XTest,YTest)
+print('SVM: One vs One')
+svcOnevsOneDict = svcOnevsOne(XTrainSVM,YTrainSVM,XTest,YTest)
+
+print('SVM: One vs All: Pre-Covid Data')
+randomNumbers = np.random.permutation(len(XTrainPreCovid))
+XTrainSVMPreCovid = XTrainPreCovid[randomNumbers[0:10000]]
+YTrainSVMPreCovid = YTrainPreCovid[randomNumbers[0:10000]]
+svcOnevsAllDictPreCovid = svcOnevsAll(XTrainSVMPreCovid,YTrainSVMPreCovid,XTestPreCovid,YTestPreCovid)
+print('SVM: One vs One: Pre-Covid Data')
+svcOnevsOneDictPreCovid = svcOnevsOne(XTrainSVMPreCovid,YTrainSVMPreCovid,XTestPreCovid,YTestPreCovid)
+
+print('SVM: One vs All: Post-Covid Data')
+randomNumbers = np.random.permutation(len(XTrainPostCovid))
+XTrainSVMPostCovid = XTrainPostCovid[randomNumbers[0:10000]]
+YTrainSVMPostCovid = YTrainPostCovid[randomNumbers[0:10000]]
+svcOnevsAllDictPostCovid = svcOnevsAll(XTrainSVMPostCovid,YTrainSVMPostCovid,XTestPostCovid,YTestPostCovid)
+print('SVM: One vs One: Post-Covid Data')
+svcOnevsOneDictPostCovid = svcOnevsOne(XTrainSVMPostCovid,YTrainSVMPostCovid,XTestPostCovid,YTestPostCovid)
+
+
+
+
