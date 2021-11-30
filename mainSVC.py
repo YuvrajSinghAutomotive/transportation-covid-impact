@@ -171,12 +171,14 @@ def cMatrixPlots(cMatrixList,YTest,MdlNames):
     ## DO NOT CALL THIS FUNCTION IN SCRIPT. Use it only in jupyter to plot confusion matrices
     fig,ax = plt.subplots(nrows=1,ncols=len(cMatrixList),figsize=(6*len(cMatrixList),5))
     cMatrixLabels = list(pd.Series(YTest).unique())
+    if len(cMatrixList)<=1:
+        ax = [ax]
     for i,cMatrix in enumerate(cMatrixList):
         img = ax[i].imshow(cMatrix,cmap='gray')
         ax[i].set_xticks(np.arange(len(cMatrixLabels)))
         ax[i].set_xticklabels(cMatrixLabels)
-        ax[i].set_xticks(np.arange(len(cMatrixLabels)))
-        ax[i].set_xticklabels(cMatrixLabels)
+        ax[i].set_yticks(np.arange(len(cMatrixLabels)))
+        ax[i].set_yticklabels(cMatrixLabels)
         ax[i].set_xlabel('Severity Class (Predicted)')
         ax[i].set_ylabel('Severity Class (Actual)')
         ax[i].set_title(MdlNames[i])
@@ -394,3 +396,87 @@ perceptronsPostCovid = perceptronsTrainTest(XTrainPostCovid,YTrainPostCovid,XTes
 '''
 Support Vector Machines
 '''
+# one versus all support vector classifier
+from sklearn.svm import SVC
+
+## One vs All SVC multi-class classifier
+def svcOnevsAll(XTrain,YTrain,XTest,YTest):
+    YTrain_dummies = pd.get_dummies(YTrain)
+    binaryClassifiers = []
+    for c,label in enumerate(YTrain_dummies.columns):
+        clf = SVC(probability=True).fit(XTrain,YTrain_dummies[YTrain_dummies.columns[c]])
+        binaryClassifiers.append(clf)
+
+    predictions = []
+    for clf in binaryClassifiers:
+        predictions.append(clf.predict_proba(XTest))
+    predProb = np.array(predictions).T
+
+    classification = []
+    for pred in predProb[1]:
+        classification.append(YTrain_dummies.columns[np.where(pred==max(pred))[0][0]])
+    classification = np.array(classification).reshape(-1)
+
+    cMatrix = confusionMatrix(classificationTest = classification,
+                              Ytest = pd.Series(YTest))
+    overallAccuracy, userAccuracy, producerAccuracy, kappaCoeff = metrics(cMatrix)
+    print('Overall Accuracy: {}'.format(np.round(overallAccuracy,3)))
+    print("User's Accuracy: {}".format(np.round(userAccuracy,3)))
+    print("Producer's Accuracy: {}".format(np.round(producerAccuracy,3)))
+    print('Kappa Coefficient: {}\n'.format(np.round(kappaCoeff,6)))
+
+    return binaryClassifiers, classification, cMatrix, metrics(cMatrix)
+
+randomNumbers = np.random.permutation(len(XTrain))
+XTrainSVM = XTrain[randomNumbers[0:1000]]
+YTrainSVM = YTrain[randomNumbers[0:1000]]
+binaryClassifiers, classification, cMatrix, metrics_cMatrix = svcOnevsAll(XTrainSVM,YTrainSVM,XTest,YTest)
+
+
+# one versus one multiclass SVM classifier 
+
+randomNumbers = np.random.permutation(len(XTrain))[0:1000]
+XTrainSVM = XTrain[randomNumbers]
+YTrainSVM = YTrain[randomNumbers]
+
+YTrain_dummies = pd.get_dummies(YTrainSVM)
+YTest_dummies = pd.get_dummies(YTest)
+svcOnevsOne = np.empty((len(YTrain_dummies.columns),len(YTrain_dummies.columns)), dtype='object')
+for c1,label1 in enumerate(YTrain_dummies.columns):
+    for c2,label2 in enumerate(YTrain_dummies.columns):
+        if c1<c2:
+            y1 = YTrain_dummies[YTrain_dummies.columns[c1]]
+            y2 = YTrain_dummies[YTrain_dummies.columns[c2]]
+            y = y1.iloc[ list(np.where( ((y1==1).astype(int) + (y2==1).astype(int))==1 )[0]) ]
+            x = XTrainSVM[list(y.index.astype(int))]
+            clf = SVC(probability=False).fit(x,y)
+            svcOnevsOne[c1][c2] = clf
+
+## Predicitons from each model
+pred = pd.DataFrame(np.zeros(len(YTest_dummies)))
+for c1,label1 in enumerate(YTrain_dummies.columns):
+    for c2,label2 in enumerate(YTrain_dummies.columns):
+        if c1<c2:
+            col = '{}_{}'.format(label1,label2)
+            pred[col] = svcOnevsOne[c1][c2].predict(XTest)
+pred = pred.drop(pred.columns[0],axis=1)
+
+## Assign labels to every model's prediction
+predLabels = pred.copy()
+for c1,label1 in enumerate(YTrain_dummies.columns):
+    for c2,label2 in enumerate(YTrain_dummies.columns):
+        if c1<c2:
+            col = '{}_{}'.format(label1,label2)
+            vector = pred[col]
+            vector[vector==1] = label1
+            vector[vector==0] = label2
+            predLabels[col] = vector
+
+# Voting for classification
+classification = pd.DataFrame(np.zeros(len(predLabels)),columns=['CLS'])
+from scipy.stats import mode
+for i in range(len(predLabels)):
+    classification.iloc[i] = ( mode(predLabels.iloc[i])[0].reshape(-1) )[0]
+    
+print('Test accuracy: {}'.format(np.mean(classification['CLS'] == YTest) ))
+
