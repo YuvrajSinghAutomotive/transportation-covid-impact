@@ -1,4 +1,4 @@
-# CSE 5523: Machine Leanring and Statistical Pattern Recognition
+# CSE 5523: Machine Learning and Statistical Pattern Recognition
 
 Final Project: Road Accident Severity Classification Using US Accidents Dataset
 
@@ -6,7 +6,9 @@ Yuvraj Singh (singh.1250) and Abdirashid Dahir (dahir.39)
 
 ## Abstract
 
-- [CSE 5523: Machine Leanring and Statistical Pattern Recognition](#cse-5523-machine-leanring-and-statistical-pattern-recognition)
+Fewer drivers were on the roads during the onset of COVID-19 pandemic because of the stay-at-home mandates and workplace policies aimed at curbing the viral spread. These stay-at-home policies led to a significant reduction in car traffic, hence reducing urban traffic congestion. This study aims to classify the severity of road accidents using the US Accidents dataset ![link here](https://www.kaggle.com/sobhanmoosavi/us-accidents)
+
+- [CSE 5523: Machine Learning and Statistical Pattern Recognition](#cse-5523-machine-learning-and-statistical-pattern-recognition)
   - [Abstract](#abstract)
   - [Introduction](#introduction)
   - [Dataset Description](#dataset-description)
