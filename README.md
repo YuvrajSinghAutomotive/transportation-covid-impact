@@ -6,7 +6,7 @@ Yuvraj Singh (singh.1250) and Abdirashid Dahir (dahir.39)
 
 ## Abstract
 
-Fewer drivers were on the roads during the onset of COVID-19 pandemic because of the stay-at-home mandates and workplace policies aimed at curbing the viral spread. These stay-at-home policies led to a significant reduction in car traffic, hence reducing urban traffic congestion. This study aims to classify the severity of road accidents using the US Accidents dataset ![link here](https://www.kaggle.com/sobhanmoosavi/us-accidents)
+Fewer drivers were on the roads during the onset of COVID-19 pandemic because of the stay-at-home mandates and workplace policies aimed at curbing the viral spread. These stay-at-home policies led to a significant reduction in car traffic, hence reducing urban traffic congestion. This study aims to classify the severity of road accidents using the US Accidents dataset [link here](https://www.kaggle.com/sobhanmoosavi/us-accidents)
 
 - [CSE 5523: Machine Learning and Statistical Pattern Recognition](#cse-5523-machine-learning-and-statistical-pattern-recognition)
   - [Abstract](#abstract)
