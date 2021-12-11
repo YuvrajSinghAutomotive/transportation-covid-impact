@@ -544,6 +544,3 @@ svcOnevsAllDictPostCovid = svcOnevsAll(XTrainSVMPostCovid,YTrainSVMPostCovid,XTe
 print('SVM: One vs One: Post-Covid Data')
 svcOnevsOneDictPostCovid = svcOnevsOne(XTrainSVMPostCovid,YTrainSVMPostCovid,XTestPostCovid,YTestPostCovid)
 
-
-
-
