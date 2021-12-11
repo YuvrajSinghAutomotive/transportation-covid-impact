@@ -19,7 +19,7 @@ Yuvraj Singh (singh.1250) and Abdirashid Dahir (dahir.39)
     - [Multi-Class Classification using Heuristic Approaches](#multi-class-classification-using-heuristic-approaches)
       - [Perceptron: One vs All and One vs One](#perceptron-one-vs-all-and-one-vs-one)
       - [Support Vector Machine: One vs All and One vs One](#support-vector-machine-one-vs-all-and-one-vs-one)
-    - [Fully-Connected Multi-Layer Neural Network](#fully-connected-multi-layer-neural-network)
+    - [Fully-Connected Multi-Layer Neural Networks](#fully-connected-multi-layer-neural-networks)
   - [Model Performance: Cross Validation and Binomial Significance Testing](#model-performance-cross-validation-and-binomial-significance-testing)
   - [Discussion](#discussion)
   - [Division of Work](#division-of-work)
@@ -49,7 +49,7 @@ Dataset URL:
 
 #### Support Vector Machine: One vs All and One vs One
 
-### Fully-Connected Multi-Layer Neural Network
+### Fully-Connected Multi-Layer Neural Networks
 
 ## Model Performance: Cross Validation and Binomial Significance Testing
 
@@ -70,6 +70,6 @@ Dataset URL:
    2. Random Forest with Bootstrap Aggregation
    3. Support Vector Machine: One vs. All, One vs. One
    4. Binomial significance testing
-   5. Credible intervals of test accuracy.
+   5. Credible intervals of test accuracy
 
 ## References
