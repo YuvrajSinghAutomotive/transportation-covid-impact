@@ -20,7 +20,9 @@ Yuvraj Singh (singh.1250) and Abdirashid Dahir (dahir.39)
       - [Perceptron: One vs All and One vs One](#perceptron-one-vs-all-and-one-vs-one)
       - [Support Vector Machine: One vs All and One vs One](#support-vector-machine-one-vs-all-and-one-vs-one)
     - [Fully-Connected Multi-Layer Neural Networks](#fully-connected-multi-layer-neural-networks)
-  - [Model Performance: Cross Validation and Binomial Significance Testing](#model-performance-cross-validation-and-binomial-significance-testing)
+  - [Model Performance](#model-performance)
+    - [Cross Validation](#cross-validation)
+    - [Binomial Significance Testing](#binomial-significance-testing)
   - [Discussion](#discussion)
   - [Division of Work](#division-of-work)
   - [References](#references)
@@ -51,7 +53,11 @@ Dataset URL:
 
 ### Fully-Connected Multi-Layer Neural Networks
 
-## Model Performance: Cross Validation and Binomial Significance Testing
+## Model Performance
+
+### Cross Validation
+
+### Binomial Significance Testing
 
 ## Discussion
 
