@@ -1,3 +1,20 @@
+---
+title: 'CSE 5523: Machine Learning'
+author: "Yuvraj Singh"
+date: "12/10/2021"
+output:
+  pdf_document: default
+  html_document: default
+geometry: margin=2.54cm
+header-includes: \usepackage{setspace}\doublespacing
+---
+
+<style type="text/css">
+  body{
+  font-size: 11pt;
+}
+</style>
+
 # CSE 5523: Machine Learning and Statistical Pattern Recognition
 
 Final Project: Road Accident Severity Classification Using US Accidents Dataset
@@ -6,12 +23,11 @@ Yuvraj Singh (singh.1250) and Abdirashid Dahir (dahir.39)
 
 ## Abstract
 
-Fewer drivers were on the roads during the onset of COVID-19 pandemic because of the stay-at-home mandates and workplace policies aimed at curbing the viral spread. These stay-at-home policies led to a significant reduction in car traffic, hence reducing urban traffic congestion. This study aims to classify the severity of road accidents using the US Accidents dataset [link here](https://www.kaggle.com/sobhanmoosavi/us-accidents)
+Fewer drivers were on the roads during the onset of COVID-19 pandemic because of the stay-at-home mandates and workplace policies aimed at curbing the viral spread. These stay-at-home policies led to a significant reduction in car traffic, hence reducing urban traffic congestion. This study aims to classify the severity of road accidents using the US Accidents dataset [link here](https://www.kaggle.com/sobhanmoosavi/us-accidents) covering road accidents from 49 contiguous US states from February 2016 through December 2020. The severity of road accidents can be qualitatively described to come from one of these classes: low, medium and high severity. This is an exploratory study employing several machine learning approaches including ensemble methods: random forests, heuristic multi-class classifiers: One vs All and One vs One strategy for perceptron and support vector machine binary classifiers and multi-layer neural networks. Model evaluation is based on confusion matrices and the models are validated using cross-validation methods and binomial significance testing.
 
 - [CSE 5523: Machine Learning and Statistical Pattern Recognition](#cse-5523-machine-learning-and-statistical-pattern-recognition)
   - [Abstract](#abstract)
-  - [Introduction](#introduction)
-  - [Dataset Description](#dataset-description)
+  - [Introduction: Dataset Description](#introduction-dataset-description)
   - [Feature Selection](#feature-selection)
   - [Base Model: Logistic Regression](#base-model-logistic-regression)
   - [Methodologies: Model Evaluation](#methodologies-model-evaluation)
@@ -29,11 +45,9 @@ Fewer drivers were on the roads during the onset of COVID-19 pandemic because of
   - [Division of Work](#division-of-work)
   - [References](#references)
 
-## Introduction
+## Introduction: Dataset Description
 
-## Dataset Description
-
-Dataset URL:
+Dataset URL: [https://www.kaggle.com/sobhanmoosavi/us-accidents][https://www.kaggle.com/sobhanmoosavi/us-accidents]
 
 ## Feature Selection
 
