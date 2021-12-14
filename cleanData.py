@@ -214,3 +214,5 @@ def cleanData(verbose):
     Y = dataPostCovid['Severity'].copy().values; Y[Y==1]=2; dataPostCovid['Severity'] = Y
 
     return data, dataPreCovid, dataPostCovid
+
+    

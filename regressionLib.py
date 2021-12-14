@@ -128,7 +128,7 @@ def resampleData(dataDict):
 Model Validation
 '''
 from scipy.stats import beta
-def plotBetaAccuracy(accuracy,numTestSamples):
+def plotBetaAccuracy(accuracy,numTestSamples,saveLocation=None):
     '''
     Test Accuracy and Confidence: beta distribution of accuracy scores
     '''
@@ -139,13 +139,34 @@ def plotBetaAccuracy(accuracy,numTestSamples):
     plt.title("Test Accuracy: \nBeta Distribution: a = {}, b = {}".format(np.floor((accuracy*numTestSamples))+1 , numTestSamples - np.floor((accuracy*numTestSamples)) +1 ) )
     plt.xlabel('Test Accuracy')
     plt.ylabel('Probability Density')
+    if type(saveLocation)!=type(None):
+        plt.savefig(saveLocation)
     plt.show()
+    plt.close()
     
-def credibleInterval():
-    pass
-
-def bayesianSignificanceTest():
-    pass
+def credibleInterval(X):
+    # input X = a numpy array of 0-1 scores
+    numsamples = 1000
+    S = pd.Series( np.random.beta( sum(X[ X==1 ]) + 1, sum(X[ X==0 ]) + 1, numsamples ) )        ## get 1000 samples
+    m = S.mean()    ## get sample mean
+    for a in S:     ## for each sample
+        n = len( S[abs(S-m)<=abs(a-m)] )        ## test as boundary
+        if n==numsamples*0.95: print( 'mean: {} +/- {}'.format(m,abs(a-m)) )
+        
+def binomialSignificanceTest(Xa,Xb):
+    # input Xa, Xb = numpy array of 0-1 scores or classifiers A and B
+    numsamples = 1000           ## not N! -- these samples are approximating the integral
+    numBwins = 0
+    if len(Xa) != len(Xb):
+        print('Different number of data points for both models. Make sure both files are of same length')
+        sys.exit()
+    numObs = len(Xa)   # number of observations
+    for i in range(numsamples):
+        pA =  np.random.beta( sum(Xa[ Xa==1 ]) + 1 , sum(Xa[ Xa==0 ]) + 1 )
+        pB =  np.random.beta( sum(Xb[ Xb==1 ]) + 1 , sum(Xb[ Xb==0 ]) + 1 )
+        if pB > pA: numBwins = numBwins+1
+    print('Probability of Classifier B having accuracy >A: ' + str(numBwins/numsamples) + '\n')
+    return numBwins/numsamples
 
 '''
 Performance Metrics

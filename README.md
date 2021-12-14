@@ -1,4 +1,4 @@
----
+<!-- ---
 title: 'CSE 5523: Machine Learning'
 author: "Yuvraj Singh"
 date: "12/10/2021"
@@ -13,7 +13,7 @@ header-includes: \usepackage{setspace}\doublespacing
   body{
   font-size: 11pt;
 }
-</style>
+</style> -->
 
 # CSE 5523: Machine Learning and Statistical Pattern Recognition
 

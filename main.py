@@ -142,6 +142,8 @@ if plotBool != 0:
 # sys.exit("Just wanted correlation matrices lol")
 # #############################################################################
 
+## Initial model selection study: using testTrain split and credible intervals, binomial significance
+
 '''
 Training models: Base model
 '''
@@ -192,8 +194,8 @@ MdlsPostCovid = {'MdlName': ['Logistic Regression: Post-Covid',
                 'Predictions': np.zeros(shape=(4,),dtype='object'),
                 'Confusion Matrix': np.zeros(shape=(4,),dtype='object') }
 
-
-def fitTestModel(Mdl,MdlName,XTrain,YTrain,XTest,YTest):
+## Fit sklearn models
+def fitTestModel(Mdl,MdlName,XTrain,YTrain,XTest,YTest,saveLocation=None):
     start = time.time()
     Mdl.fit(XTrain, YTrain)
     end = time.time()
@@ -204,7 +206,10 @@ def fitTestModel(Mdl,MdlName,XTrain,YTrain,XTest,YTest):
     pred = np.array(pred).reshape(YTest.shape)
     accuracy = np.mean(pred == YTest)
     print('Accuracy: {}'.format(accuracy) )
-    plotBetaAccuracy(accuracy,XTest.shape[0])
+    if type(saveLocation)!=type(None):
+        plotBetaAccuracy(accuracy,XTest.shape[0],saveLocation)
+    else:
+        plotBetaAccuracy(accuracy,XTest.shape[0])
 
     cMatrix = confusionMatrix(classificationTest = pred,
                               Ytest = pd.Series(YTest))
@@ -239,11 +244,31 @@ def cMatrixPlots(cMatrixList,YTest,MdlNames):
     fig.tight_layout()
     return fig,ax
 
+def cMatrixPlot_single(cMatrix,YTest,MdlName):
+    ## DO NOT CALL THIS FUNCTION IN SCRIPT. Use it only in jupyter to plot confusion matrices
+    fig,ax = plt.subplots(nrows=1,ncols=1,figsize=(3.5,3.5))
+    cMatrixLabels = list(pd.Series(YTest).unique())
+    img = ax.imshow(cMatrix,cmap='gray')
+    ax.set_xticks(np.arange(len(cMatrixLabels)))
+    ax.set_xticklabels(cMatrixLabels)
+    ax.set_yticks(np.arange(len(cMatrixLabels)))
+    ax.set_yticklabels(cMatrixLabels)
+    ax.set_xlabel('Severity Class (Actual)')
+    ax.set_ylabel('Severity Class (Predicted)')
+    ax.set_title(MdlName)
+    for j in range(len(cMatrixLabels)):
+        for k in range(len(cMatrixLabels)):
+            ax.text(j-0.25,k,int(cMatrix[k,j]),color='blue',fontweight='semibold',fontsize=18)
+    fig.colorbar(mappable=img,ax = ax, fraction=0.1)
+    fig.tight_layout()
+    return fig,ax
+
 for i in range(len(Mdls['Mdl'])):
     Mdls['Mdl'][i] , \
     Mdls['Predictions'][i], \
     Mdls['Confusion Matrix'][i] = fitTestModel(Mdl=Mdls['Mdl'][i],MdlName=Mdls['MdlName'][i], 
-                                                    XTrain=XTrain, YTrain=YTrain, XTest=XTest, YTest=YTest)
+                                                    XTrain=XTrain, YTrain=YTrain, XTest=XTest, YTest=YTest,
+                                                    saveLocation='./Plots/report plots/mdlSelection/beta_{}.eps'.format(i))
 
 for i in range(len(MdlsPreCovid['Mdl'])):
     MdlsPreCovid['Mdl'][i] , \
@@ -544,3 +569,19 @@ svcOnevsAllDictPostCovid = svcOnevsAll(XTrainSVMPostCovid,YTrainSVMPostCovid,XTe
 print('SVM: One vs One: Post-Covid Data')
 svcOnevsOneDictPostCovid = svcOnevsOne(XTrainSVMPostCovid,YTrainSVMPostCovid,XTestPostCovid,YTestPostCovid)
 
+'''
+Credible Intervals and Binomial Significance testing for sklearn models
+Note: Just import libraries here: code is implemented in yuvraj.ipynb
+'''
+from regressionLib import credibleInterval, binomialSignificanceTest
+# Implemented in notebook yuvraj.ipynb
+
+'''
+Cross Validation: random forest with AdaBoost
+'''
+# Implemented in notebook yuvraj.ipynb
+
+'''
+Neural Net: tensorflow
+'''
+# Implemented in notebook yuvraj.ipynb
